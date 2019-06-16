@@ -9,12 +9,19 @@ using UnityEngine.SceneManagement;
 public class MusicScript : MonoBehaviour
 {
 
+    static MusicScript instance;
+
     public AudioSource audioData;
     private Slider slider;
     private Image imgmusic;
     private Sprite musicon;
     private Sprite musicoff;
 
+
+    private void LoadSprites() {
+        musicon = Resources.Load<Sprite>("musicon");
+        musicoff = Resources.Load<Sprite>("musicoff");
+    }
     private void GetSlider()
     {
         slider = GameObject.Find("SoundSlider").GetComponent<Slider>();
@@ -26,20 +33,34 @@ public class MusicScript : MonoBehaviour
         Button toggler = GameObject.Find("MusicButton").GetComponent<Button>();
         toggler.onClick.AddListener(delegate { ToggleMusic(); });
         imgmusic = GameObject.Find("MusicImage").GetComponent<Image>();
-        musicon = Resources.Load<Sprite>("musicon");
-        musicoff = Resources.Load<Sprite>("musicoff");
+        
+    }
+
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
     }
 
     public void Start()
     {
+        GameObject gmobj = GameObject.Find("BGMusic");
         GetSlider();
         GetToggler();
+        LoadSprites();
         SceneManager.sceneLoaded += OnNewSceneLoaded;
         audioData = GetComponent<AudioSource>();
         audioData.volume = slider.value;
         audioData.Play(0);
         audioData.loop = true;
-        DontDestroyOnLoad(this.gameObject);
+        
     }
 
     void SoundSlide()
@@ -49,12 +70,14 @@ public class MusicScript : MonoBehaviour
 
     void OnNewSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log("New Scene Loaded and MusicScript detected it.");
+        GetSlider();
+        GetToggler();
+        slider.value = audioData.volume;
+        imgmusic.sprite = audioData.mute ? musicoff : musicon;
     }
 
     public void ToggleMusic()
     {
-        Debug.Log("Music Toggle");
         audioData.mute = !audioData.mute;
         imgmusic.sprite = audioData.mute ? musicoff : musicon; 
     }
