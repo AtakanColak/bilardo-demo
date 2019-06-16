@@ -7,8 +7,9 @@ using TMPro;
 
 public class GameScript : MonoBehaviour
 {
-    private Transform MainCamera;
+    private Transform camera;
     private Transform whiteball;
+    private Transform cuestick;
     private TextMeshProUGUI timer;
     private float time;
     private float sensitivity = 1;
@@ -16,7 +17,7 @@ public class GameScript : MonoBehaviour
 
     private Vector3 cameraFocus()
     {
-        return whiteball.position + new Vector3(0, 0.5f, 0);
+        return whiteball.position + 2 * (whiteball.position - camera.position) + new Vector3(0, 1, 0);
     }
 
     private void MainMenu()
@@ -24,32 +25,40 @@ public class GameScript : MonoBehaviour
         SceneManager.LoadScene("Menu");
     }
 
-    void Start()
+    private void LoadGameObjects()
     {
-        time = 0.0f;
+        timer = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
+        camera = GameObject.Find("Main Camera").GetComponent<Camera>().transform;
+        whiteball = GameObject.Find("WhiteBall").transform;
+        cuestick = GameObject.Find("CueStick").transform;
         Button returnToMainMenu = GameObject.Find("ExitButton").GetComponent<Button>();
         returnToMainMenu.onClick.AddListener(delegate { MainMenu(); });
-        timer = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
-        MainCamera = GameObject.Find("Main Camera").GetComponent<Camera>().transform;
-        whiteball = GameObject.Find("WhiteBall").transform;
-        MainCamera.position = whiteball.position + new Vector3(-2, 1f, 0);
+    }
+
+    private void PositionStick()
+    {
+        cuestick.position = camera.position + new Vector3(0, -0.5f, 0) + -0.5f * (whiteball.position - camera.position);
+        cuestick.LookAt(whiteball);
+    }
+
+    void Start()
+    {
+        LoadGameObjects();
+        time = 0.0f;
+        camera.position = whiteball.position + new Vector3(-2, 1f, 0);
+        camera.LookAt(cameraFocus());
+        PositionStick();
     }
 
     void Update()
     {
         time += Time.deltaTime;
         timer.text = time.ToString("0.0") + " s";
-        MainCamera.LookAt(cameraFocus());
-        //if (Input.GetMouseButtonDown(0))
-        //{
-        //    dragOrigin = Input.mousePosition;
-        //    return;
-        //}
+       
         if (!Input.GetMouseButton(0)) { dragOrigin = Input.mousePosition;  return; }
         Vector3 pos = Camera.main.ScreenToViewportPoint(dragOrigin - Input.mousePosition);
-
-        MainCamera.RotateAround(cameraFocus(), -Vector3.up, pos.x* sensitivity);
-        //float rotateHorizontal = Input.GetAxis("Mouse X");
-        //MainCamera.RotateAround(cameraFocus(), -Vector3.up, rotateHorizontal * sensitivity);
+        camera.RotateAround(whiteball.position, -Vector3.up, pos.x* sensitivity);
+        camera.LookAt(cameraFocus());
+        PositionStick();   
     }
 }
