@@ -6,8 +6,6 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    
-
     public void PlayGame()
     {
         SceneManager.LoadScene("Game");
@@ -17,5 +15,4 @@ public class MainMenu : MonoBehaviour
     {
         Application.Quit();
     }
-
 }
