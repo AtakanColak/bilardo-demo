@@ -9,7 +9,7 @@ public class BallSoundScript : MonoBehaviour
     public AudioClip hit;
     private AudioSource source;
     private Slider slider;
-    // Start is called before the first frame update
+
     void Start()
     {
         source = GetComponent<AudioSource>();
@@ -19,6 +19,6 @@ public class BallSoundScript : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        source.PlayOneShot(hit, slider.value);
+        source.PlayOneShot(hit, slider.value * collision.relativeVelocity.magnitude * 0.25f);
     }
 }

@@ -122,13 +122,6 @@ public class GameScript : MonoBehaviour
         }
     }
 
-    private void PositionStick()
-    {
-        cuestick.position = camera.position + new Vector3(0, -0.5f, 0) + -0.5f * (whiteball.position - camera.position);
-        cuestick.LookAt(whiteball);
-        //DrawLine();
-    }
-
     private void CameraLook()
     {
         Vector3 d = whiteball.position - camera.position;
@@ -209,7 +202,6 @@ public class GameScript : MonoBehaviour
         else if (Input.GetKeyUp("space"))
         {
             cuestick.position = cuestickOutside;
-            
             source.PlayOneShot(hit, slider.value);
             ballbody.AddForce(1.25f * cuemove * RemoveY(direction()), ForceMode.Impulse);
         }
