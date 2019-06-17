@@ -8,6 +8,7 @@ using TMPro;
 public class GameScript : MonoBehaviour
 {
     public Material mat;
+    private Rigidbody ballbody;
     private Transform camera;
     private Transform whiteball;
     private Transform cuestick;
@@ -15,11 +16,15 @@ public class GameScript : MonoBehaviour
     private TextMeshProUGUI timer;
     private Vector3 dragOrigin;
     private float time;
-    private float sensitivity = 1;
+    private float sensitivity = 1.0f;
     private float counter = 0.0f;
     private float linespeed = 6f;
     private float linedist;
     private float max = 0.0f;
+    private float cuemove = 0.0f;
+    private bool dir = false;
+    private bool spacePress = false;
+
     private Vector3 cameraFocus()
     {
         return whiteball.position + 2 * direction() + new Vector3(0, 1, 0);
@@ -44,6 +49,8 @@ public class GameScript : MonoBehaviour
         timer = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
         camera = GameObject.Find("Main Camera").GetComponent<Camera>().transform;
         whiteball = GameObject.Find("WhiteBall").transform;
+        ballbody = GameObject.Find("WhiteBall").GetComponent<Rigidbody>();
+        //ballbody.drag = 1;
         cuestick = GameObject.Find("CueStick").transform;
         line = GameObject.Find("Line").GetComponent<LineRenderer>();
         Button returnToMainMenu = GameObject.Find("ExitButton").GetComponent<Button>();
@@ -96,13 +103,13 @@ public class GameScript : MonoBehaviour
                         line.SetPosition(2, c.origin);
                     }  
                 }
-            }    
+            }
         }
     }
 
     private void PositionStick()
     {
-        cuestick.position = camera.position + new Vector3(0, -0.5f, 0) + -0.5f * direction();
+        cuestick.position = camera.position + new Vector3(0, -0.5f, 0) + -0.5f * (whiteball.position - camera.position);
         cuestick.LookAt(whiteball);
         DrawLine();
     }
@@ -114,6 +121,8 @@ public class GameScript : MonoBehaviour
 
         camera.position = whiteball.position + new Vector3(-2, 1f, 0);
         camera.LookAt(cameraFocus());
+
+        cuestick.position = whiteball.position + new Vector3(-2.2f, 0.5f, 0);
         PositionStick();
     }
 
@@ -122,7 +131,41 @@ public class GameScript : MonoBehaviour
         time += Time.deltaTime;
         timer.text = time.ToString("0.0") + " s";
 
-        if (!Input.GetMouseButton(0)) { dragOrigin = Input.mousePosition; return; }
+        if (!ballbody.IsSleeping()) return;
+
+        if (Input.GetKey("space"))
+        {
+            spacePress = true;
+            if (cuemove <= 0.0f)
+            {
+                cuemove = 0.0f;
+                dir = false;
+            }
+            else if (cuemove >= 1.0f)
+            {
+                cuemove = 1.0f;
+                dir = true;
+            }
+            cuemove += dir ? -0.01f : 0.01f;
+            float m = dir ? 0.01f : -0.01f;
+            cuestick.position += m * Vector3.Normalize(whiteball.position - cuestick.position);
+            cuestick.LookAt(whiteball);
+            return;
+        }
+        else {
+            
+            dir = false;
+            PositionStick();
+            if (spacePress)
+            {
+                ballbody.AddForce(25 * cuemove * RemoveY(direction()));
+                spacePress = false;
+            }
+            cuemove = 0.0f;
+        }
+
+        if (!Input.GetMouseButton(0)) { dragOrigin = Input.mousePosition; line.enabled = false;  return; }
+        line.enabled = true;
         Vector3 pos = Camera.main.ScreenToViewportPoint(dragOrigin - Input.mousePosition);
         camera.RotateAround(whiteball.position, -Vector3.up, pos.x * sensitivity);
         max = pos.y * 10;
