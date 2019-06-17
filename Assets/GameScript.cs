@@ -11,10 +11,14 @@ public class GameScript : MonoBehaviour
     private Vector3 cuestickOffset = new Vector3(-2.2f, 0.5f, 0);
     private Vector3 cuestickOutside = new Vector3(-7, 1, -1);
 
+    public AudioClip hit;
+    private AudioSource source;
+
     public Material mat;
-    private Rigidbody ballbody;
+    private Rigidbody ballbody, redbody, yellowbody;
+    private Slider slider;
     private Transform camera;
-    private Transform whiteball;
+    private Transform whiteball, redball, yellowball;
     private Transform cuestick;
     private LineRenderer line;
     private TextMeshProUGUI timer;
@@ -51,11 +55,18 @@ public class GameScript : MonoBehaviour
 
     private void LoadGameObjects()
     {
+        source = GetComponent<AudioSource>();
+        hit = Resources.Load("hitsound") as AudioClip;
         timer = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
         camera = GameObject.Find("Main Camera").GetComponent<Camera>().transform;
         whiteball = GameObject.Find("WhiteBall").transform;
+        redball = GameObject.Find("RedBall").transform;
+        yellowball = GameObject.Find("YellowBall").transform;
         ballbody = GameObject.Find("WhiteBall").GetComponent<Rigidbody>();
+        redbody = GameObject.Find("RedBall").GetComponent<Rigidbody>();
+        yellowbody = GameObject.Find("YellowBall").GetComponent<Rigidbody>();
         cuestick = GameObject.Find("CueStick").transform;
+        slider = GameObject.Find("SoundSlider").GetComponent<Slider>();
         line = GameObject.Find("Line").GetComponent<LineRenderer>();
         Button returnToMainMenu = GameObject.Find("ExitButton").GetComponent<Button>();
         returnToMainMenu.onClick.AddListener(delegate { MainMenu(); });
@@ -149,15 +160,31 @@ public class GameScript : MonoBehaviour
         PositionInitial();
         CameraLook();
         CueStickAim();
-        DrawLine();
     }
 
     void Update()
     {
         time += Time.deltaTime;
         timer.text = time.ToString("0.0") + " s";
+        CameraLook();
+        if (Vector3.Distance(whiteball.position, camera.position) > 100) {
+            ballbody.velocity = new Vector3(0, 0, 0);
+            PositionInitial();
+            CueStickAim();
+        }
 
-        if (!ballbody.IsSleeping())
+        if (Vector3.Distance(yellowball.position, camera.position) > 100) {
+            yellowbody.velocity = new Vector3(0, 0, 0);
+            yellowball.position = new Vector3(2, 0.01f, 1);
+        }
+
+        if (Vector3.Distance(redball.position, camera.position) > 100)
+        {
+            redbody.velocity = new Vector3(0, 0, 0);
+            redball.position = new Vector3(2, 0.01f, -1);
+        }
+
+        if (!ballbody.IsSleeping() || !redbody.IsSleeping() || !yellowbody.IsSleeping())
         {
             if (spacePress)
                 return;
@@ -182,7 +209,9 @@ public class GameScript : MonoBehaviour
         else if (Input.GetKeyUp("space"))
         {
             cuestick.position = cuestickOutside;
-            ballbody.AddForce(cuemove * RemoveY(direction()), ForceMode.Impulse);
+            
+            source.PlayOneShot(hit, slider.value);
+            ballbody.AddForce(1.25f * cuemove * RemoveY(direction()), ForceMode.Impulse);
         }
         
         else if (spacePress)

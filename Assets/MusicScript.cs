@@ -65,7 +65,7 @@ public class MusicScript : MonoBehaviour
 
     void SoundSlide()
     {
-        audioData.volume = slider.value;
+        audioData.volume = slider.value / 2;
     }
 
     void OnNewSceneLoaded(Scene scene, LoadSceneMode mode)
