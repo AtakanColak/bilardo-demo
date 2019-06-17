@@ -58,6 +58,7 @@ public class GameScript : MonoBehaviour
 
     private void MainMenu()
     {
+        onDestroy();
         SceneManager.LoadScene("Menu");
     }
 
@@ -175,16 +176,22 @@ public class GameScript : MonoBehaviour
     {
         if (scorer.text == "5")
         {
-            GameData g = new GameData();
-            g.hits = hits;
-            int.TryParse(scorer.text, out g.score);
-            g.time = time;
-            string json = JsonUtility.ToJson(g);
-            StreamWriter writer = new StreamWriter(filename, true);
-            writer.WriteLine(json);
-            writer.Close();
+            onDestroy();
             MainMenu();
         }
+    }
+
+    void onDestroy() {
+        GameData g = new GameData();
+        g.hits = hits;
+        int.TryParse(scorer.text, out g.score);
+        g.time = time;
+        string json = JsonUtility.ToJson(g);
+        File.Delete(filename);
+        StreamWriter writer = new StreamWriter(filename, true);
+        
+        writer.Write(json);
+        writer.Close();
     }
 
     void Update()
