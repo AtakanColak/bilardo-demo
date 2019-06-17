@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.IO;
 using TMPro;
 
 public class GameScript : MonoBehaviour
@@ -15,6 +16,7 @@ public class GameScript : MonoBehaviour
     private AudioSource source;
 
     public Material mat;
+    private string filename = "gamedata.json";
     private Rigidbody ballbody, redbody, yellowbody;
     private Slider slider;
     private Transform camera;
@@ -22,6 +24,7 @@ public class GameScript : MonoBehaviour
     private Transform cuestick;
     private LineRenderer line;
     private TextMeshProUGUI timer;
+    private TextMeshProUGUI scorer;
     private Vector3 dragOrigin;
     private float time = 0.0f;
     private float sensitivity = 1.0f;
@@ -32,7 +35,7 @@ public class GameScript : MonoBehaviour
     private float cuemove = 0.0f;
     private bool dir = false;
     private bool spacePress = false;
-
+    private int hits = 0;
     private Vector3 cameraFocus()
     {
         return whiteball.position + 2 * direction() + new Vector3(0, 1, 0);
@@ -58,6 +61,7 @@ public class GameScript : MonoBehaviour
         source = GetComponent<AudioSource>();
         hit = Resources.Load("hitsound") as AudioClip;
         timer = GameObject.Find("TimerText").GetComponent<TextMeshProUGUI>();
+        scorer = GameObject.Find("ScoreText").GetComponent<TextMeshProUGUI>();
         camera = GameObject.Find("Main Camera").GetComponent<Camera>().transform;
         whiteball = GameObject.Find("WhiteBall").transform;
         redball = GameObject.Find("RedBall").transform;
@@ -155,6 +159,22 @@ public class GameScript : MonoBehaviour
         CueStickAim();
     }
 
+    void GameEnd()
+    {
+        if(scorer.text == "5")
+        {
+            GameData g = new GameData();
+            g.hits = hits;
+            int.TryParse(scorer.text, out g.score);
+            g.time = time;
+            string json = JsonUtility.ToJson(g);
+            StreamWriter writer = new StreamWriter(filename, true);
+            writer.WriteLine(json);
+            writer.Close();
+            MainMenu();
+        }
+    }
+
     void Update()
     {
         time += Time.deltaTime;
@@ -204,6 +224,7 @@ public class GameScript : MonoBehaviour
             cuestick.position = cuestickOutside;
             source.PlayOneShot(hit, slider.value);
             ballbody.AddForce(1.25f * cuemove * RemoveY(direction()), ForceMode.Impulse);
+            hits++;
         }
         
         else if (spacePress)
@@ -231,4 +252,14 @@ public class GameScript : MonoBehaviour
         CueStickAim();
         DrawLine();
     }
+
+    [System.Serializable]
+    public class GameData
+    {
+        public int score;
+        public float time;
+        public int hits;
+    }
 }
+
+
