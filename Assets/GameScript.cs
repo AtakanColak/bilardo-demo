@@ -19,6 +19,7 @@ public class GameScript : MonoBehaviour
     private string filename = "gamedata.json";
     private Rigidbody ballbody, redbody, yellowbody;
     private Slider slider;
+    private Button replay;
     private Transform camera;
     private Transform whiteball, redball, yellowball;
     private Transform cuestick;
@@ -34,7 +35,11 @@ public class GameScript : MonoBehaviour
     private float max = 0.0f;
     private float cuemove = 0.0f;
     private bool dir = false;
+    private bool afterre = false;
     private bool spacePress = false;
+    private bool re = false;
+    private Vector3[] repos = new Vector3[4];
+    private string scorestring;
     private int hits = 0;
     private Vector3 cameraFocus()
     {
@@ -74,6 +79,12 @@ public class GameScript : MonoBehaviour
         line = GameObject.Find("Line").GetComponent<LineRenderer>();
         Button returnToMainMenu = GameObject.Find("ExitButton").GetComponent<Button>();
         returnToMainMenu.onClick.AddListener(delegate { MainMenu(); });
+        replay = GameObject.Find("Replay").GetComponent<Button>();
+        replay.onClick.AddListener(delegate { Replay(); });
+    }
+
+    private void Replay() {
+        re = true;
     }
 
     private bool Deflect(Ray ray, out Ray deflected, out RaycastHit hit)
@@ -161,7 +172,7 @@ public class GameScript : MonoBehaviour
 
     void GameEnd()
     {
-        if(scorer.text == "5")
+        if (scorer.text == "5")
         {
             GameData g = new GameData();
             g.hits = hits;
@@ -180,13 +191,15 @@ public class GameScript : MonoBehaviour
         time += Time.deltaTime;
         timer.text = time.ToString("0.0") + " s";
         CameraLook();
-        if (Vector3.Distance(whiteball.position, camera.position) > 100) {
+        if (Vector3.Distance(whiteball.position, camera.position) > 100)
+        {
             ballbody.velocity = new Vector3(0, 0, 0);
             PositionInitial();
             CueStickAim();
         }
 
-        if (Vector3.Distance(yellowball.position, camera.position) > 100) {
+        if (Vector3.Distance(yellowball.position, camera.position) > 100)
+        {
             yellowbody.velocity = new Vector3(0, 0, 0);
             yellowball.position = new Vector3(2, 0.01f, 1);
         }
@@ -201,6 +214,17 @@ public class GameScript : MonoBehaviour
         {
             if (spacePress)
                 return;
+        }
+
+        if (afterre) {
+            re = false;
+            afterre = false;
+            whiteball.position = repos[0];
+            redball.position = repos[1];
+            yellowball.position = repos[2];
+            ballbody.AddForce(repos[3], ForceMode.Impulse);
+            scorer.text = scorestring;
+            return;
         }
 
         if (Input.GetKey("space"))
@@ -218,15 +242,26 @@ public class GameScript : MonoBehaviour
             cuestick.LookAt(whiteball);
             return;
         }
-        
+
         else if (Input.GetKeyUp("space"))
         {
             cuestick.position = cuestickOutside;
             source.PlayOneShot(hit, slider.value);
-            ballbody.AddForce(1.25f * cuemove * RemoveY(direction()), ForceMode.Impulse);
+            Vector3 f = 1.25f * cuemove * RemoveY(direction());
+            if (re) {
+                repos[0] = whiteball.position;
+                repos[1] = redball.position;
+                repos[2] = yellowball.position;
+                repos[3] = f;
+                afterre = true;
+                scorestring = scorer.text;
+            }
+            ballbody.AddForce(f, ForceMode.Impulse);
             hits++;
+            
+            
         }
-        
+
         else if (spacePress)
         {
             camera.position = whiteball.position + cameraOffset;
