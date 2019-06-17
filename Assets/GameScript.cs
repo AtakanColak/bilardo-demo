@@ -85,6 +85,7 @@ public class GameScript : MonoBehaviour
 
     private void Replay() {
         re = true;
+        replay.enabled = false;
     }
 
     private bool Deflect(Ray ray, out Ray deflected, out RaycastHit hit)
@@ -224,6 +225,7 @@ public class GameScript : MonoBehaviour
             yellowball.position = repos[2];
             ballbody.AddForce(repos[3], ForceMode.Impulse);
             scorer.text = scorestring;
+            replay.enabled = true;
             return;
         }
 

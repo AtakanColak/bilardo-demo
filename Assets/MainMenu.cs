@@ -29,8 +29,8 @@ public class MainMenu : MonoBehaviour
         string json = reader.ReadToEnd();
         reader.Close();
         GameData g = JsonUtility.FromJson<GameData>(json);
-        time.text = g.time.ToString();
-        hits.text = g.hits.ToString();
+        time.text = g.time.ToString() + " s";
+        hits.text = g.hits.ToString() + " hits";
     }
 
     [System.Serializable]

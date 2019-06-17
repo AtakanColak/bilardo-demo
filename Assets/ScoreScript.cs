@@ -8,8 +8,6 @@ public class ScoreScript : MonoBehaviour
     private bool red = false;
     private bool yellow = false;
 
-    private int score = 0;
-
     private TextMeshProUGUI scorer;
 
     // Start is called before the first frame update
@@ -20,14 +18,15 @@ public class ScoreScript : MonoBehaviour
 
     void Scored()
     {
-        scorer.text = score.ToString();
+        int i;
+        int.TryParse(scorer.text, out i);
+        scorer.text = (i + 1).ToString();
     }
 
     // Update is called once per frame
     void Update()
     {
         if (red && yellow) {
-            score++;
             red = false;
             yellow = false;
             Scored();
